@@ -8,6 +8,11 @@ gameLoopFlag DWORD 1
 menuOption DWORD 0
 gameMode DWORD ? ; 1 - easy, 2 - medium, 3 - hard
 gameType DWORD ? ; 1 - General Knowledge, 2 - Computer Science
+QuestionOffset DWORD ?
+QuestionLength = 25
+hintOffset DWORD ?
+QuestionHintLength = 300
+hintLength = 60
 score DWORD 0
 overallScore DWORD 0
 tries DWORD 0
@@ -21,7 +26,7 @@ madeCorrectGuess DWORD 0 ; a flag
 
 ; game menu prompts
 gameMenu BYTE "1 - Play the Game", 0Ah, 0Dh, "2 - How to Play", 0Ah, 0Dh, "3 - Exit", 0Ah, 0Dh, 0
-modeSelectionMenu BYTE 0Ah, 0Dh, "1 - Easy", 0Ah, 0Dh, "2 - Medium", 0Ah, 0Dh, "3 - Hard", 0Ah, 0Dh, 0
+modeSelectionMenu BYTE 0Ah, 0Dh, "1 - Easy (5 Hints)", 0Ah, 0Dh, "2 - Medium (3 Hints)", 0Ah, 0Dh, "3 - Hard (1 Hint)", 0Ah, 0Dh, 0
 genreSelectionMenu BYTE 0Ah, 0Dh, "1 - General Knowledge", 0Ah, 0Dh, "2 - Computer Science", 0Ah, 0Dh, 0
 invalidInput BYTE "Invalid input", 0
 selectOption BYTE "> Enter Your Choice: ", 0
@@ -29,6 +34,7 @@ easyModeSelected BYTE "> Easy mode selected!", 0Ah, 0Dh, 0
 mediumModeSelected BYTE "> Medium mode selected!", 0Ah, 0Dh, 0
 hardModeSelected BYTE "> Hard mode selected!", 0Ah, 0Dh, 0
 guessPrompt BYTE "Make a guess: ", 0
+WordToBeGuessedPrompt BYTE "The characters of word to be guessed is: ", 0
 wrongGuessPrompt BYTE "Your guess is wrong :(", 0Ah, 0Dh, 0
 correctGuessPrompt BYTE "Your guess is correct :)", 0Ah, 0Dh, 0
 triesPrompt BYTE "Youve guessed it right in these much tries: ", 0
@@ -162,8 +168,93 @@ GetGenre PROC
 GetGenre ENDP
 
 GamePlay PROC
+	call clrscr
+	call DisplayClueCraze
+
+	mov dh, 10
+	mov dl, 0
+	call Gotoxy
+
+	mov eax, 4
+	call Randomize
+	call RandomRange
+
+	cmp gameType, 2
+	jne ForSameGenreLabel
+	add eax, 5
+
+	ForSameGenreLabel:
+
+	mov ebx, OFFSET Questions
+	mov edx, OFFSET Hint_Questions
+	LoopQuestion:
+		cmp eax, 0
+		je EndLoopQuestion
+
+		dec eax
+		add ebx, QuestionLength
+		add edx, QuestionHintLength
+	jmp LoopQuestion
 	
+	EndLoopQuestion:
+
+	mov QuestionOffset, ebx ; Question Location
+	mov hintOffset, edx
+
+	mov edx, QuestionOffset
+	mov eax, 0
+	mov ebx, 1
+
+	mov dh, 10
+	mov dl, 0
+	call Gotoxy
+
+	mov edx, OFFSET WordToBeGuessedPrompt
+	call WriteString
+
+	; Printing Word Character (_)
+	mov ecx, QuestionLength
+	mov esi, OFFSET QuestionOffset
+	PrintQuestion:
+		mov al, '_' ; blank space
+		mov bl, [esi]
+		
+		cmp bl, '|'
+		je endPrintQuestion
+
+		cmp bl, ' '
+		jne SpaceCheck
+		mov al, ' '
+
+		SpaceCheck:
+		call WriteChar
+		
+		inc esi
+	loop PrintQuestion
+	endPrintQuestion:
+
+	mov dh, 12
+	mov dl, 0
+	call Gotoxy
+
+	; PRINTING HINTS HERE DEPENDING ON DIFFICULTY LEVEL
+	mov edx, hintOffset
+	call WriteString
+
+	mov dh, 20
+	mov dl, 0
+	call Gotoxy
+
+	mov edx, OFFSET guessPrompt
+	call WriteString
+
+	mov ecx, 25
+	call ReadString
+
+	call waitmsg
+
+	ret
 GamePlay ENDP
 
-
+	
 END main
