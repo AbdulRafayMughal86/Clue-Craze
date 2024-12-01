@@ -18,6 +18,10 @@ hintLength = 60
 score DWORD 0
 overallScore DWORD 0
 nHints DWORD ?
+hintRowStart BYTE 13
+hintRowCurrent BYTE ?
+WordGuessRow BYTE 20
+WordGuessCol BYTE 14
 
 ; game menu prompts
 gameMenu BYTE "1 - Play the Game", 0Ah, 0Dh, "2 - How to Play", 0Ah, 0Dh, "3 - Exit", 0Ah, 0Dh, 0
@@ -25,7 +29,7 @@ modeSelectionMenu BYTE 0Ah, 0Dh, "1 - Easy (5 Hints)", 0Ah, 0Dh, "2 - Medium (3 
 genreSelectionMenu BYTE 0Ah, 0Dh, "1 - General Knowledge", 0Ah, 0Dh, "2 - Computer Science", 0Ah, 0Dh, 0
 invalidInput BYTE "Invalid input", 0
 selectOption BYTE "> Enter Your Choice: ", 0
-guessPrompt BYTE "Make a guess: ", 0
+guessPrompt BYTE "Make a guess:                                      ", 0
 WordToBeGuessedPrompt BYTE "The characters of word to be guessed is: ", 0
 wrongGuessPrompt BYTE "Your guess is wrong :(", 0Ah, 0Dh, 0
 correctGuessPrompt BYTE "Your guess is correct :)", 0Ah, 0Dh, 0
@@ -270,13 +274,23 @@ GamePlay PROC
 	mov edx, hintOffset
 	call WriteString
 
-	mov dh, 20
+	mov dl, hintRowStart
+	mov hintRowCurrent, dl
+
+	mov dh, WordGuessRow
 	mov dl, 0
 	call Gotoxy
 
 	guessingContinue:
+	mov dh, WordGuessRow
+	mov dl, 0
+	call Gotoxy
 	mov edx, OFFSET guessPrompt
 	call WriteString
+	
+	mov dh, WordGuessRow
+	mov dl, WordGuessCol
+	call Gotoxy
 
 	mov ecx, QuestionLength
 	mov edx, OFFSET UsersGuess
@@ -326,23 +340,31 @@ GamePlay ENDP
 PrintHints PROC
 	push ebp
 	mov ebp, esp
+
+	mov dh, hintRowCurrent
+	mov dl, 0
+	call Gotoxy
 	mov edx, [ebp + 8]
-
-	;mov dh, 20   ; overlap occurs bcs of this
-	;mov dl, 0
-	;call Gotoxy
-
 	call WriteString
 	call crlf
 	
+	mov dh, WordGuessRow
+	dec dh
+	mov dl, 0
+	call Gotoxy
 	mov edx, OFFSET HintsLeft
 	call writestring
 
 	dec nHints
-
 	mov eax, nHints
 	call writedec
-	call crlf
+
+
+	inc hintRowCurrent
+	mov dh, WordGuessRow
+	mov dl, 0
+	call Gotoxy
+
 	pop ebp
 	ret 4
 PrintHints ENDP
