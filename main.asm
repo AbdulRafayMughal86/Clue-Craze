@@ -10,19 +10,14 @@ gameMode DWORD ? ; 1 - easy, 2 - medium, 3 - hard
 gameType DWORD ? ; 1 - General Knowledge, 2 - Computer Science
 QuestionOffset DWORD ?
 QuestionLength = 25
+QuestionActualLength DWORD ?
+UsersGuess BYTE 25 DUP(?)
 hintOffset DWORD ?
-QuestionHintLength = 300
+QuestionHintLength = 360
 hintLength = 60
 score DWORD 0
 overallScore DWORD 0
-tries DWORD 0
 nHints DWORD ?
-nWrongAttempts DWORD ?
-overallWrongAttempts DWORD 0
-wordToBeGuessed DWORD ?
-hintsOfWord DWORD ?
-guessedWord BYTE ?
-madeCorrectGuess DWORD 0 ; a flag
 
 ; game menu prompts
 gameMenu BYTE "1 - Play the Game", 0Ah, 0Dh, "2 - How to Play", 0Ah, 0Dh, "3 - Exit", 0Ah, 0Dh, 0
@@ -30,22 +25,14 @@ modeSelectionMenu BYTE 0Ah, 0Dh, "1 - Easy (5 Hints)", 0Ah, 0Dh, "2 - Medium (3 
 genreSelectionMenu BYTE 0Ah, 0Dh, "1 - General Knowledge", 0Ah, 0Dh, "2 - Computer Science", 0Ah, 0Dh, 0
 invalidInput BYTE "Invalid input", 0
 selectOption BYTE "> Enter Your Choice: ", 0
-easyModeSelected BYTE "> Easy mode selected!", 0Ah, 0Dh, 0
-mediumModeSelected BYTE "> Medium mode selected!", 0Ah, 0Dh, 0
-hardModeSelected BYTE "> Hard mode selected!", 0Ah, 0Dh, 0
 guessPrompt BYTE "Make a guess: ", 0
 WordToBeGuessedPrompt BYTE "The characters of word to be guessed is: ", 0
 wrongGuessPrompt BYTE "Your guess is wrong :(", 0Ah, 0Dh, 0
 correctGuessPrompt BYTE "Your guess is correct :)", 0Ah, 0Dh, 0
-triesPrompt BYTE "Youve guessed it right in these much tries: ", 0
-youWon BYTE "> You WON!", 0Ah, 0Dh, 0
-playAgain BYTE "> Want to play again? (0/1): ", 0
 overallScoreDisplay BYTE "> Your overall score: ", 0
-overallWrongAttemptsDisplay BYTE "> Your overall wrong attempts: ", 0
-gameStopped BYTE "Game exited!", 0Ah, 0Dh, 0
-howtoplayRules BYTE "Rules yahan display hongay", 0Ah, 0Dh, 0
-usedAllAttempts BYTE "You have used all your attempts, YOU LOST :(", 0Ah, 0Dh, 0
-printingHints BYTE "Below are the hints for the word! Guess it correctly.", 0Ah, 0Dh, 0
+RanOutOfAttempts BYTE "You have run out of attempts :(", 0
+RanOutOfHints BYTE "You have run out of hints :(", 0
+HintsLeft BYTE "Hints Left: ", 0
 
 .code
 main PROC
@@ -79,6 +66,15 @@ jmp mainGameLoop
 endMain:
 	
 	call displayThankYou
+    call crlf
+	mov edx, OFFSET overallScoreDisplay
+	call writestring
+	mov eax, overallScore
+	call writedec
+    call crlf
+    call crlf
+	call waitmsg
+
 	exit
 main ENDP
 
@@ -137,6 +133,23 @@ GetDifficultyLevel PROC
 
 	mov gameMode, eax
 
+	cmp eax, 1
+	je easySelected
+	
+	cmp eax, 2
+	je mediumSelected
+	
+	mov nHints, 1               ; hard selected
+	jmp selectionDone
+
+	easySelected:
+	mov nHints, 5
+	jmp selectionDone
+
+	mediumSelected:
+	mov nHints, 3
+
+	selectionDone:
 	ret
 GetDifficultyLevel ENDP
 
@@ -184,9 +197,10 @@ GamePlay PROC
 	add eax, 5
 
 	ForSameGenreLabel:
-
+	
 	mov ebx, OFFSET Questions
 	mov edx, OFFSET Hint_Questions
+	
 	LoopQuestion:
 		cmp eax, 0
 		je EndLoopQuestion
@@ -201,7 +215,6 @@ GamePlay PROC
 	mov QuestionOffset, ebx ; Question Location
 	mov hintOffset, edx
 
-	mov edx, QuestionOffset
 	mov eax, 0
 	mov ebx, 1
 
@@ -212,9 +225,25 @@ GamePlay PROC
 	mov edx, OFFSET WordToBeGuessedPrompt
 	call WriteString
 
-	; Printing Word Character (_)
+	; Counting Chars in Question
 	mov ecx, QuestionLength
-	mov esi, OFFSET QuestionOffset
+	mov esi, QuestionOffset
+	
+	mov eax, 0
+	countChars:
+		mov bl, [esi]
+		cmp bl, '|'
+		je charsCounted
+		inc eax
+		inc esi
+	loop countChars
+	
+	charsCounted:
+	mov QuestionActualLength, eax
+
+	; Printing Word Character (_)
+	mov ecx, QuestionActualLength
+	mov esi, QuestionOffset
 	PrintQuestion:
 		mov al, '_' ; blank space
 		mov bl, [esi]
@@ -245,16 +274,105 @@ GamePlay PROC
 	mov dl, 0
 	call Gotoxy
 
+	guessingContinue:
 	mov edx, OFFSET guessPrompt
 	call WriteString
 
-	mov ecx, 25
+	mov ecx, QuestionLength
+	mov edx, OFFSET UsersGuess
 	call ReadString
+	
+	; pass questionOFfset
+	; pass question
+	; pass questionSize
 
-	call waitmsg
+	push QuestionOffset
+	push OFFSET UsersGuess
+	push QuestionActualLength
+	
+	call CompareStrings
+	
+	cmp eax, 1               ; means answer is correct
+	je correctAnswer
+	
+	mov eax, nHints
+	cmp eax, 0
+	je ranOutOfHintsLabel
 
+	; hints left
+	add hintOffset, hintLength
+	push hintOffset
+	call printHints
+	jmp guessingContinue
+
+	ranOutOfHintsLabel:
+	mov edx, OFFSET RanOutOfHints
+	call writestring
+	jmp gamePlayEnd
+
+	correctAnswer:
+	mov edx, OFFSET correctGuessPrompt
+	call writestring
+	call crlf
+	inc score
+	mov eax, score
+	add overallScore, eax
+	jmp gameplayEnd
+
+	gameplayEnd:
 	ret
 GamePlay ENDP
 
+PrintHints PROC
+	push ebp
+	mov ebp, esp
+	mov edx, [ebp + 8]
+
+	;mov dh, 20   ; overlap occurs bcs of this
+	;mov dl, 0
+	;call Gotoxy
+
+	call WriteString
+	call crlf
+	
+	mov edx, OFFSET HintsLeft
+	call writestring
+
+	dec nHints
+
+	mov eax, nHints
+	call writedec
+	call crlf
+	pop ebp
+	ret 4
+PrintHints ENDP
+
+CompareStrings PROC
+	push ebp
+	mov ebp, esp
+	mov esi, [ebp + 16]
+	mov edi, [ebp + 12]
+	mov ecx, [ebp + 8]
+
+	mov eax, 1 ; they are equal
+
+	compare:
+		mov bl, [esi]
+		cmp bl, '|'
+		je compared
+		cmp bl, [edi]
+		je keepComparing
+		mov eax, 0 ; not equal
+		jmp compared
+		keepComparing:
+
+		inc esi
+		inc edi
+	loop compare
+	
+	compared:
+	pop ebp
+	ret 12
+CompareStrings ENDP
 	
 END main

@@ -18,12 +18,13 @@ ThankYouDisplay5 BYTE "          |  |     |   __   |   /  /_\  \   |  . `  | |  
 ThankYouDisplay6 BYTE "          |  |     |  |  |  |  /  _____  \  |  |\   | |  .  \         |  |    |  `--'  | |  `--'  | ", 0Ah, 0Dh, 0
 ThankYouDisplay7 BYTE "          |__|     |__|  |__| /__/     \__\ |__| \__| |__|\__\        |__|     \______/   \______/  ", 0Ah, 0Dh, 0
 
-HowToPlayDisplay1 BYTE "Rules likhne hai abhi idhar", 0Ah, 0Dh, 0
-HowToPlayDisplay2 BYTE " OK", 0Ah, 0Dh, 0
-HowToPlayDisplay3 BYTE " OK", 0Ah, 0Dh, 0
-HowToPlayDisplay4 BYTE " OK", 0Ah, 0Dh, 0
-HowToPlayDisplay5 BYTE " OK", 0Ah, 0Dh, 0
-HowToPlayDisplay6 BYTE " OK", 0Ah, 0Dh, 0
+HowToPlayDisplay1 BYTE "- In ClueCraze, you have to guess the word correctly using only hints", 0Ah, 0Dh, 0
+HowToPlayDisplay2 BYTE "you've selected according to the difficulty level you chose.", 0Ah, 0Dh, 0
+HowToPlayDisplay3 BYTE "- Upon every wrong answer, you will be displayed a hint.", 0Ah, 0Dh, 0
+HowToPlayDisplay4 BYTE "- If you guess correctly, the score gets incremented.", 0Ah, 0Dh, 0
+HowToPlayDisplay5 BYTE "- Good luck and enjoy the game!", 0Ah, 0Dh, 0
+HowToPlayDisplay6 BYTE "- Have fun playing ClueCraze!", 0Ah, 0Dh, 0
+
 
 .code
 
@@ -85,7 +86,6 @@ displayThankYou PROC
     mov dl, 0
     call gotoxy
 
-    call waitmsg
 
     ret
 displayThankYou ENDP
