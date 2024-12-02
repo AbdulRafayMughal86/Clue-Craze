@@ -1,15 +1,15 @@
 .code
 
-Questions   BYTE "Taj Mahal|||||||||||||||", 0
-Questions2  BYTE "Eiffel Tower||||||||||||", 0
-Questions3  BYTE "Great Wall of China|||||", 0
-Questions4  BYTE "Pyramids of Giza||||||||", 0
-Questions5  BYTE "Statue of Liberty|||||||", 0
-Questions6  BYTE "Binary Search|||||||||||", 0
-Questions7  BYTE "Cloud Computing|||||||||", 0
-Questions8  BYTE "Artificial Intelligence|", 0
-Questions9  BYTE "Blockchain||||||||||||||", 0
-Questions10 BYTE "HTTP||||||||||||||||||||", 0
+Questions   BYTE "taj mahal|||||||||||||||", 0
+Questions2  BYTE "eiffel tower||||||||||||", 0
+Questions3  BYTE "great wall of china|||||", 0
+Questions4  BYTE "pyramids of giza||||||||", 0
+Questions5  BYTE "statue of liberty|||||||", 0
+Questions6  BYTE "binary search|||||||||||", 0
+Questions7  BYTE "cloud computing|||||||||", 0
+Questions8  BYTE "artificial intelligence|", 0
+Questions9  BYTE "blockchain||||||||||||||", 0
+Questions10 BYTE "http||||||||||||||||||||", 0
 
 Hint_Questions     BYTE "Famous white marble mausoleum in India.                    ", 0
 Hint_Questions_1_2 BYTE "Built by Shah Jahan for his wife Mumtaz.                   ", 0

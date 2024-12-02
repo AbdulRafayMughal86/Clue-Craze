@@ -295,6 +295,9 @@ GamePlay PROC
 	mov ecx, QuestionLength
 	mov edx, OFFSET UsersGuess
 	call ReadString
+
+	push OFFSET UsersGuess
+	call ToLowerCase
 	
 	; pass questionOFfset
 	; pass question
@@ -368,6 +371,36 @@ PrintHints PROC
 	pop ebp
 	ret 4
 PrintHints ENDP
+
+ToLowerCase PROC
+	push ebp
+	mov ebp, esp
+	pushad
+
+	mov esi, [ebp + 8]
+	mov ecx, 25
+
+	LoopLowerCase:
+		mov al, [esi]
+
+		cmp al, 'A'
+		jl endIteration
+
+		cmp al, 'Z'
+		jg endIteration
+
+		add al, 32
+		mov [esi], al
+
+		endIteration:
+		inc esi
+
+	loop LoopLowerCase
+	popad
+	pop ebp
+
+	ret 4
+ToLowerCase ENDP
 
 CompareStrings PROC
 	push ebp
