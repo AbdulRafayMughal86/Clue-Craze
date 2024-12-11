@@ -299,7 +299,7 @@ GamePlay PROC
 	push OFFSET UsersGuess
 	call ToLowerCase
 	
-	; pass questionOFfset
+	; pass questionOffset
 	; pass question
 	; pass questionSize
 
